@@ -1,0 +1,104 @@
+name: unittest
+
+on:
+  push:
+  pull_request:
+  schedule: [cron: "40 1 * * *"]
+
+
+jobs:
+  build:
+    name: xorfilter
+    runs-on: ubuntu-latest
+
+
+    strategy:
+      matrix:
+        toolchain:
+          - "stable"
+          - "nightly"
+        profile:
+          - "--release"
+          # Disable debug mode test
+          # It's about 10 times slower with debug mode: ~ 10 minutes
+          # - ""
+        cmd:
+          - "build"
+          - "test"
+
+
+    steps:
+      - name: Install toolchain with clippy available
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: "${{ matrix.toolchain }}"
+          override: true
+          components: clippy
+
+
+      - uses: actions/checkout@v2
+
+
+      - name: "${{ matrix.toolchain }} ${{ matrix.cmd }} ${{ matrix.profile }}"
+        uses: actions-rs/cargo@v1
+        with:
+          command: "${{ matrix.cmd }}"
+          args: --verbose ${{ matrix.profile }}
+
+  build-benchmark:
+    runs-on: ubuntu-latest
+
+
+    steps:
+      - name: Install toolchain with clippy available
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: "nightly"
+          override: true
+
+
+      - uses: actions/checkout@v2
+
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: bench
+          args: --verbose nothing-to-run
+
+
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1.0.6
+        with:
+          profile: minimal
+          toolchain: "nightly"
+          override: true
+          components: rustfmt, clippy
+
+
+      - name: Format
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
+
+
+      - name: Clippy
+        uses: actions-rs/clippy-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          args: --all-targets -- -D warnings -A clippy::uninlined_format_args
+
+
+      - name: Build-doc
+        uses: actions-rs/cargo@v1
+        with:
+          command: doc
+          args: --all --no-deps
+        env:
+          RUSTDOCFLAGS: "-D warnings"

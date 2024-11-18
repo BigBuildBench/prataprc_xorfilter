@@ -1,0 +1,51 @@
+[package]
+name = "xorfilter-rs"
+version = "0.6.0"
+description = "Xor Filters: Faster and Smaller Than Bloom and Cuckoo Filters"
+repository = "https://github.com/bnclabs/xorfilter"
+documentation = "https://docs.rs/xorfilter-rs"
+keywords = ["xorfilter", "bloom", "bitmap", "data-structures"]
+categories = ["algorithms", "database", "data-structures"]
+homepage = "https://github.com/bnclabs/xorfilter"
+authors = ["prataprc <prataprc@gmail.com>"]
+license = "Apache-2.0"
+edition = "2018"
+readme = "README.md"
+
+[profile.release]
+debug = true
+
+[profile.bench]
+debug = true
+
+[lib]
+name = "xorfilter"
+
+[[bin]]
+name = "perf"
+required-features = ["perf", "cbordata"]
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[dependencies]
+
+[dev-dependencies]
+criterion = "0.3"
+rand = { version = "0.7.3", features = ["small_rng"] }
+
+[[bench]]
+name = "xor_bench"
+harness = false
+
+[[bench]]
+name = "fuse8_bench"
+harness = false
+
+[[bench]]
+name = "fuse16_bench"
+harness = false
+
+[features]
+perf = ["structopt", "rand", "cbordata"]
+
+[badges]
+maintenance = { status = "actively-developed" }
